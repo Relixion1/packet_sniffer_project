@@ -1,0 +1,10 @@
+Ether / IP / TCP 192.168.1.17:61723 > 116.97.90.124:domain S
+Ether / IP / TCP 192.168.1.17:60221 > 116.97.90.124:domain S
+Ether / Dot1Q / IP / TCP 116.97.90.124:domain > 192.168.1.17:60221 SA
+Ether / Dot1Q / IP / TCP 116.97.90.124:domain > 192.168.1.17:61723 SA
+Ether / IP / TCP 192.168.1.17:60221 > 116.97.90.124:domain A
+Ether / IP / TCP 192.168.1.17:61723 > 116.97.90.124:domain A
+Ether / IP / TCP 192.168.1.17:60221 > 116.97.90.124:domain PA / Raw
+Ether / IP / TCP 192.168.1.17:60221 > 116.97.90.124:domain PA / Raw
+Ether / IP / TCP 192.168.1.17:61723 > 116.97.90.124:domain PA / Raw
+Ether / IP / TCP 192.168.1.17:61723 > 116.97.90.124:domain PA / Raw
