@@ -1,9 +1,6 @@
 import sys
-import subprocess
 from scapy.all import sr1,IP,ICMP
 from scapy.all import *
-
-
 
 def Sniff(count_var, var_name):
     sys.stdout = open("terminal_log.txt", "w")

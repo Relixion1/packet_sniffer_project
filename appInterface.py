@@ -12,7 +12,8 @@ class MainWidget(QDialog, QTableWidget, QTableWidgetItem):
         self.table.setRowCount(0)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Network Access Layer", "Internet Layer", "Transport Layer/Request", "Application Layer"])
-        self.table.setColumnWidth(2, 900)
+        self.table.setColumnWidth(2, 500)
+        self.table.setColumnWidth(0, 200)
         self.FieldIPAddress = QLineEdit()
         self.FieldDuration = QLineEdit()
         self.FieldPacketAmount = QLineEdit()
@@ -70,15 +71,13 @@ class MainWidget(QDialog, QTableWidget, QTableWidgetItem):
                         text_array = []
                     else:
                         text_array.append(char)
+                item_packet = QTableWidgetItem("".join(text_array))
                 self.table.setItem(line_count, slash_count, item_packet)
 
                         
-
-    
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWidget()
-    widget.resize(1920, 1080)
+    widget.resize(1000, 780)
     widget.show()
     sys.exit(app.exec())
