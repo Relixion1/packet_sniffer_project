@@ -18,19 +18,14 @@ class MainWidget(QWidget):
         self.table.setHorizontalHeaderLabels(["Network Access Layer", "Internet Layer", "Transport Layer/Request", "Application Layer"])
         self.table.setColumnWidth(2, 500)
         self.table.setColumnWidth(0, 200)
-        self.FieldIPAddress = QLineEdit()
-        self.FieldDuration = QLineEdit()
         self.FieldPacketAmount = QLineEdit()
-        self.button = QPushButton("Send Echo Request")
         self.button1 = QPushButton("Sniff!")
         self.button2 = QPushButton("Clear Table")
         self.button3 = QPushButton("Cancel")
+        self.button4 = QPushButton("Open Echo Request Window")
         self.button3.setEnabled(False)
         self.title = QLabel("Minh's Packet Sniffer Application")
-        self.title1 = QLabel("ICMP Echo Request")
         self.title2 = QLabel("Sniff Incoming Traffic")
-        self.Fieldtext = QLabel("Enter the IP Address: ")
-        self.Fieldtext1 = QLabel("Enter the duration: ")
         self.Fieldtext2 = QLabel("Enter the amount of packets")
         layout = QVBoxLayout()
         layout.addWidget(self.title)
@@ -40,25 +35,16 @@ class MainWidget(QWidget):
         layout.addWidget(self.button1)
         layout.addWidget(self.button3)
         layout.addWidget(self.button2)
-        layout.addWidget(self.title1)
-        layout.addWidget(self.Fieldtext)
-        layout.addWidget(self.FieldIPAddress)
-        layout.addWidget(self.Fieldtext1)
-        layout.addWidget(self.FieldDuration)
-        layout.addWidget(self.button)
         layout.addWidget(self.table)
+        layout.addWidget(self.button4)
         self.setLayout(layout)
-        self.button.clicked.connect(self.echo)
         self.button1.clicked.connect(self.start_sniff)
         self.button2.clicked.connect(self.clear)
         self.button3.clicked.connect(self.stop_sniff)
+        self.button4.clicked.connect(self.open_er_window)
         self.task = None
     
         
-    
-    def echo(self):
-        print(f"Your IP Address is: {self.FieldIPAddress.text()}")
-        packetSniff.ICMPEchoRequest(self.FieldIPAddress.text(), self.FieldDuration.text())
     
     def start_sniff(self):
         print(f"Your packet count is: {self.FieldPacketAmount.text()}")
@@ -108,12 +94,42 @@ class MainWidget(QWidget):
         self.table.setRowCount(0)
         open("terminal_log.txt" , "w").close()
 
-    
+    def open_er_window(self):
+        subwidget.show()
+
+class SubWidget(QWidget):
+    def __init__(self, parent=None):
+        super(SubWidget, self).__init__(parent)
+        self.button = QPushButton("Send Echo Request")
+        self.button1 = QPushButton("Close Window")
+        self.FieldIPAddress = QLineEdit()
+        self.FieldDuration = QLineEdit()
+        self.title1 = QLabel("ICMP Echo Request")
+        self.Fieldtext = QLabel("Enter the IP Address: ")
+        self.Fieldtext1 = QLabel("Enter the duration: ")
+        layout = QVBoxLayout()
+        layout.addWidget(self.title1)
+        layout.addWidget(self.Fieldtext)
+        layout.addWidget(self.FieldIPAddress)
+        layout.addWidget(self.Fieldtext1)
+        layout.addWidget(self.FieldDuration)
+        layout.addWidget(self.button)
+        layout.addWidget(self.button1)
+        self.setLayout(layout)
+        self.button.clicked.connect(self.echo)
+        self.button1.clicked.connect(self.Close)
+    def echo(self):
+        packetSniff.ICMPEchoRequest(self.FieldIPAddress.text(), self.FieldDuration.text())
+    def Close(self):
+        self.hide()
+
 
                         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWidget()
     widget.resize(1000, 780)
+    subwidget = SubWidget()
+    subwidget.resize(500, 250)
     widget.show()
     sys.exit(app.exec())
