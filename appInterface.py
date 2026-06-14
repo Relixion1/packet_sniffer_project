@@ -1,13 +1,17 @@
 import sys
 import packetSniff
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import (QLineEdit, QLabel, QPushButton, QApplication,
+from scapy.all import sr1,IP,ICMP
+from scapy.all import *
+from PySide6.QtWidgets import (QWidget,QMainWindow, QLineEdit, QLabel, QPushButton, QApplication,
     QVBoxLayout, QDialog, QTableWidget, QTableWidgetItem)
+from PySide6.QtCore import (QObject, QRunnable, QThreadPool,Signal, Slot)
 
 
-class MainWidget(QDialog, QTableWidget, QTableWidgetItem):
+class MainWidget(QWidget):
     def __init__(self, parent=None):
         super(MainWidget, self).__init__(parent)
+        self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(3)
         self.table = QTableWidget()
         self.table.setRowCount(0)
         self.table.setColumnCount(4)
@@ -17,24 +21,25 @@ class MainWidget(QDialog, QTableWidget, QTableWidgetItem):
         self.FieldIPAddress = QLineEdit()
         self.FieldDuration = QLineEdit()
         self.FieldPacketAmount = QLineEdit()
-        self.FieldVariableName = QLineEdit()
         self.button = QPushButton("Send Echo Request")
         self.button1 = QPushButton("Sniff!")
+        self.button2 = QPushButton("Clear Table")
+        self.button3 = QPushButton("Cancel")
+        self.button3.setEnabled(False)
         self.title = QLabel("Minh's Packet Sniffer Application")
         self.title1 = QLabel("ICMP Echo Request")
         self.title2 = QLabel("Sniff Incoming Traffic")
         self.Fieldtext = QLabel("Enter the IP Address: ")
         self.Fieldtext1 = QLabel("Enter the duration: ")
         self.Fieldtext2 = QLabel("Enter the amount of packets")
-        self.Fieldtext3 = QLabel("Enter the variable name: ")
         layout = QVBoxLayout()
         layout.addWidget(self.title)
         layout.addWidget(self.title2)
         layout.addWidget(self.Fieldtext2)
         layout.addWidget(self.FieldPacketAmount)
-        layout.addWidget(self.Fieldtext3)
-        layout.addWidget(self.FieldVariableName)
         layout.addWidget(self.button1)
+        layout.addWidget(self.button3)
+        layout.addWidget(self.button2)
         layout.addWidget(self.title1)
         layout.addWidget(self.Fieldtext)
         layout.addWidget(self.FieldIPAddress)
@@ -44,18 +49,28 @@ class MainWidget(QDialog, QTableWidget, QTableWidgetItem):
         layout.addWidget(self.table)
         self.setLayout(layout)
         self.button.clicked.connect(self.echo)
-        self.button1.clicked.connect(self.sniff)
+        self.button1.clicked.connect(self.start_sniff)
+        self.button2.clicked.connect(self.clear)
+        self.button3.clicked.connect(self.stop_sniff)
+        self.task = None
     
         
-
+    
     def echo(self):
         print(f"Your IP Address is: {self.FieldIPAddress.text()}")
         packetSniff.ICMPEchoRequest(self.FieldIPAddress.text(), self.FieldDuration.text())
-
-    def sniff(self):
+    
+    def start_sniff(self):
         print(f"Your packet count is: {self.FieldPacketAmount.text()}")
-        print(f"Your variable name is: {self.FieldVariableName.text()}")
-        packetSniff.Sniff(self.FieldPacketAmount.text(), self.FieldVariableName.text())
+        self.button1.setEnabled(False)
+        self.button3.setEnabled(True)
+        self.task = packetSniff.sniffTask(self.FieldPacketAmount.text())
+        self.task.finished.connect(self.sniff_success)
+        self.task.error.connect(self.sniff_error)
+        self.threadpool.start(self.task)
+
+
+    def log_sniff(self):
         with open("terminal_log.txt", "r") as file:
             for line_count, line in enumerate(file):
                 self.table.setRowCount(line_count + 1)
@@ -73,6 +88,27 @@ class MainWidget(QDialog, QTableWidget, QTableWidgetItem):
                         text_array.append(char)
                 item_packet = QTableWidgetItem("".join(text_array))
                 self.table.setItem(line_count, slash_count, item_packet)
+
+    def stop_sniff(self):
+        if self.task:
+            self.task.cancel()
+
+    def sniff_success(self):
+        self.button1.setEnabled(True)
+        self.button3.setEnabled(False)
+        self.log_sniff()
+
+    def sniff_error(self):
+        self.button1.setEnabled(True)
+        self.button3.setEnabled(False)
+        self.log_sniff()
+
+
+    def clear(self):
+        self.table.setRowCount(0)
+        open("terminal_log.txt" , "w").close()
+
+    
 
                         
 if __name__ == "__main__":
