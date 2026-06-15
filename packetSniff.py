@@ -5,29 +5,20 @@ from scapy.all import *
 
 class sniffTask(QObject, QRunnable):
     finished = Signal(str)
+    packet_sniffed = Signal(str)
     error = Signal(str)
+    stop_condition = False
     def __init__(self, count_var, parent=None):
         QObject.__init__(self, parent)
         QRunnable.__init__(self)
-        self.count_var = count_var
-        self._is_cancelled = False
+        self.count_var = int(count_var)
     @Slot()
     def cancel(self):
-        self._is_cancelled = True
         self.error.emit(f"Task was cancelled!")
     def run(self):
         print("runnin")
-        while not self._is_cancelled:
-            sys.stdout = open("terminal_log.txt", "w")
-            self.count_var = int(self.count_var)
-            sniff(count=self.count_var, prn=lambda x: x.summary())
-            sys.stdout.close()
-            sys.stdout = sys.__stdout__
-            self.finished.emit(f"Tasks is completed with {self.count_var} packets sniffed!")
-            break
-        if self._is_cancelled:
-            self.error.emit(f"Task was cancelled!")
-            open("terminal_log.txt", "w").close()
+        sniff(prn=lambda x: self.packet_sniffed.emit(x.summary()), count=self.count_var, stop_filter=self.stop_condition)
+        self.finished.emit(f"Tasks is completed with {self.count_var} packets sniffed!")
 
 def ICMPEchoRequest(input_dst, time_var):
     sys.stdout = open("terminal_log.txt", "w")

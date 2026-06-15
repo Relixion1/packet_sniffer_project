@@ -47,33 +47,32 @@ class MainWidget(QWidget):
         
     
     def start_sniff(self):
-        print(f"Your packet count is: {self.FieldPacketAmount.text()}")
+        if self.FieldPacketAmount.text() == "":
+            return
         self.button1.setEnabled(False)
         self.button3.setEnabled(True)
         self.task = packetSniff.sniffTask(self.FieldPacketAmount.text())
         self.task.finished.connect(self.sniff_success)
+        self.task.packet_sniffed.connect(self.writePacket)
         self.task.error.connect(self.sniff_error)
         self.threadpool.start(self.task)
 
-
-    def log_sniff(self):
-        with open("terminal_log.txt", "r") as file:
-            for line_count, line in enumerate(file):
-                self.table.setRowCount(line_count + 1)
-                stripped_line = line.strip()
-                slash_count = 0
-                text_array = []
-                for char in stripped_line:
-                    if char == "/":
-                        print("".join(text_array))
-                        item_packet = QTableWidgetItem("".join(text_array))
-                        self.table.setItem(line_count, slash_count, item_packet)
-                        slash_count += 1
-                        text_array = []
-                    else:
-                        text_array.append(char)
+    def writePacket(self, message : str):
+        slash_count = 0
+        text_array = []
+        rowCount = self.table.rowCount()
+        self.table.setRowCount(rowCount + 1)
+        for char in message:
+            if char == "/":
                 item_packet = QTableWidgetItem("".join(text_array))
-                self.table.setItem(line_count, slash_count, item_packet)
+                self.table.setItem(rowCount, slash_count, item_packet)
+                slash_count += 1
+                text_array = []
+            else:
+                text_array.append(char)
+        item_packet = QTableWidgetItem("".join(text_array))
+        self.table.setItem(rowCount, slash_count, item_packet)
+
 
     def stop_sniff(self):
         if self.task:
@@ -82,17 +81,15 @@ class MainWidget(QWidget):
     def sniff_success(self):
         self.button1.setEnabled(True)
         self.button3.setEnabled(False)
-        self.log_sniff()
 
     def sniff_error(self):
         self.button1.setEnabled(True)
         self.button3.setEnabled(False)
-        self.log_sniff()
 
 
     def clear(self):
         self.table.setRowCount(0)
-        open("terminal_log.txt" , "w").close()
+        #open("terminal_log.txt" , "w").close()
 
     def open_er_window(self):
         subwidget.show()
@@ -106,7 +103,7 @@ class SubWidget(QWidget):
         self.FieldDuration = QLineEdit()
         self.title1 = QLabel("ICMP Echo Request")
         self.Fieldtext = QLabel("Enter the IP Address: ")
-        self.Fieldtext1 = QLabel("Enter the duration: ")
+        self.Fieldtext1 = QLabel("Enter the duration (in seconds): ")
         layout = QVBoxLayout()
         layout.addWidget(self.title1)
         layout.addWidget(self.Fieldtext)
