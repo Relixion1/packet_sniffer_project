@@ -7,18 +7,25 @@ class sniffTask(QObject, QRunnable):
     finished = Signal(str)
     packet_sniffed = Signal(str)
     error = Signal(str)
-    stop_condition = False
     def __init__(self, count_var, parent=None):
         QObject.__init__(self, parent)
         QRunnable.__init__(self)
         self.count_var = int(count_var)
+        self.sniffer = AsyncSniffer(prn=lambda x: self.packet_sniffed.emit(x.summary()), count=self.count_var)
+        self.stop_condition = False
     @Slot()
     def cancel(self):
+        self.stop_condition = True
         self.error.emit(f"Task was cancelled!")
+        self.sniffer.stop()
     def run(self):
-        print("runnin")
-        sniff(prn=lambda x: self.packet_sniffed.emit(x.summary()), count=self.count_var, stop_filter=self.stop_condition)
-        self.finished.emit(f"Tasks is completed with {self.count_var} packets sniffed!")
+        self.sniffer.start()
+        while self.sniffer.running:
+            pass
+        if not self.stop_condition:
+            self.finished.emit(f"Task is completed with {self.count_var} packets sniffed!")
+            print("yaey")
+
 
 def ICMPEchoRequest(input_dst, time_var):
     sys.stdout = open("terminal_log.txt", "w")
@@ -29,9 +36,7 @@ def ICMPEchoRequest(input_dst, time_var):
     p=sr1(IP(dst=input_dst)/ICMP(), timeout=time_var)
     if p:
         p.show()
-        print(True)
         return True
-    print(False)
     sys.stdout.close()
     sys.stdout = sys.__stdout__
     return False

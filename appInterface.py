@@ -89,7 +89,6 @@ class MainWidget(QWidget):
 
     def clear(self):
         self.table.setRowCount(0)
-        #open("terminal_log.txt" , "w").close()
 
     def open_er_window(self):
         subwidget.show()
