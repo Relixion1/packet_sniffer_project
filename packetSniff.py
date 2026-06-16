@@ -14,7 +14,7 @@ class sniffTask(QObject, QRunnable):
         self.sniffer = AsyncSniffer(prn=lambda x: self.packet_sniffed.emit(x.summary()), count=self.count_var)
         self.stop_condition = False
     @Slot()
-    def cancel(self):
+    def stop(self):
         self.stop_condition = True
         self.error.emit(f"Task was cancelled!")
         self.sniffer.stop()
@@ -24,7 +24,6 @@ class sniffTask(QObject, QRunnable):
             pass
         if not self.stop_condition:
             self.finished.emit(f"Task is completed with {self.count_var} packets sniffed!")
-            print("yaey")
 
 
 def ICMPEchoRequest(input_dst, time_var):

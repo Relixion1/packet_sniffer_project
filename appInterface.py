@@ -21,7 +21,7 @@ class MainWidget(QWidget):
         self.FieldPacketAmount = QLineEdit()
         self.button1 = QPushButton("Sniff!")
         self.button2 = QPushButton("Clear Table")
-        self.button3 = QPushButton("Cancel")
+        self.button3 = QPushButton("Stop")
         self.button4 = QPushButton("Open Echo Request Window")
         self.button3.setEnabled(False)
         self.title = QLabel("Minh's Packet Sniffer Application")
@@ -76,7 +76,7 @@ class MainWidget(QWidget):
 
     def stop_sniff(self):
         if self.task:
-            self.task.cancel()
+            self.task.stop()
 
     def sniff_success(self):
         self.button1.setEnabled(True)
