@@ -5,13 +5,13 @@ from scapy.all import *
 
 class sniffTask(QObject, QRunnable):
     finished = Signal(str)
-    packet_sniffed = Signal(str)
+    packet_sniffed = Signal(str, str)
     error = Signal(str)
     def __init__(self, count_var, parent=None):
         QObject.__init__(self, parent)
         QRunnable.__init__(self)
         self.count_var = int(count_var)
-        self.sniffer = AsyncSniffer(prn=lambda x: self.packet_sniffed.emit(x.summary()), count=self.count_var)
+        self.sniffer = AsyncSniffer(prn=lambda x: self.packet_sniffed.emit(x.summary(), x.show(dump=True)), count=self.count_var)
         self.stop_condition = False
     @Slot()
     def stop(self):

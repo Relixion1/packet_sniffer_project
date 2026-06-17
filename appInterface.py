@@ -3,20 +3,23 @@ import packetSniff
 from scapy.all import sr1,IP,ICMP
 from scapy.all import *
 from PySide6.QtWidgets import (QWidget,QMainWindow, QLineEdit, QLabel, QPushButton, QApplication,
-    QVBoxLayout, QDialog, QTableWidget, QTableWidgetItem)
+    QVBoxLayout, QDialog, QTableWidget, QTableWidgetItem, QHeaderView)
 from PySide6.QtCore import (QObject, QRunnable, QThreadPool,Signal, Slot)
 
 
 class MainWidget(QWidget):
     def __init__(self, parent=None):
         super(MainWidget, self).__init__(parent)
+        self.metaDataObj = []
+        self.setWindowTitle("Packet Sniffer Project Application")
         self.threadpool = QThreadPool()
         self.threadpool.setMaxThreadCount(3)
         self.table = QTableWidget()
         self.table.setRowCount(0)
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Network Access Layer", "Internet Layer", "Transport Layer/Request", "Application Layer"])
-        self.table.setColumnWidth(2, 500)
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["Network Access Layer", "Internet Layer", "Transport Layer/Request", "Application Layer", "Detailed Metadata"])
+        self.table.setColumnWidth(2, 350)
+        self.table.setColumnWidth(4, 230)
         self.table.setColumnWidth(0, 200)
         self.FieldPacketAmount = QLineEdit()
         self.button1 = QPushButton("Sniff!")
@@ -24,11 +27,9 @@ class MainWidget(QWidget):
         self.button3 = QPushButton("Stop")
         self.button4 = QPushButton("Open Echo Request Window")
         self.button3.setEnabled(False)
-        self.title = QLabel("Minh's Packet Sniffer Application")
         self.title2 = QLabel("Sniff Incoming Traffic")
         self.Fieldtext2 = QLabel("Enter the amount of packets")
         layout = QVBoxLayout()
-        layout.addWidget(self.title)
         layout.addWidget(self.title2)
         layout.addWidget(self.Fieldtext2)
         layout.addWidget(self.FieldPacketAmount)
@@ -57,7 +58,7 @@ class MainWidget(QWidget):
         self.task.error.connect(self.sniff_error)
         self.threadpool.start(self.task)
 
-    def writePacket(self, message : str):
+    def writePacket(self, message : str, message2 :str):
         slash_count = 0
         text_array = []
         rowCount = self.table.rowCount()
@@ -72,6 +73,9 @@ class MainWidget(QWidget):
                 text_array.append(char)
         item_packet = QTableWidgetItem("".join(text_array))
         self.table.setItem(rowCount, slash_count, item_packet)
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        packetMetaObj = packetMetadata(self.table, message2, rowCount)
+        self.metaDataObj.append(packetMetaObj)
 
 
     def stop_sniff(self):
@@ -92,6 +96,39 @@ class MainWidget(QWidget):
 
     def open_er_window(self):
         subwidget.show()
+
+class packetMetadata(QWidget):
+    def __init__(self, table, message, row_count, parent=None):
+        super(packetMetadata, self).__init__(parent)
+        self.message = message
+        self.table = table
+        self.row_count = row_count
+        self.button5 = QPushButton("Show")
+        self.button6 = QPushButton("Hide")
+        self.metadataLabel = QLabel(self.message)
+        self.cell_widget = QWidget()
+        self.inner_layout = QVBoxLayout()
+        self.inner_layout.addWidget(self.button5)
+        self.inner_layout.addWidget(self.button6)
+        self.inner_layout.addWidget(self.metadataLabel)
+        self.button6.hide()
+        self.metadataLabel.hide()
+        self.cell_widget.setLayout(self.inner_layout)
+        self.table.setCellWidget(self.row_count, 4, self.cell_widget)
+        self.button5.clicked.connect(self.showPacketMeta)
+        self.button6.clicked.connect(self.hidePacketMeta)
+    def showPacketMeta(self):
+        self.button5.hide()
+        self.button6.show()
+        self.metadataLabel.show()
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+    def hidePacketMeta(self):
+        self.button6.hide()
+        self.metadataLabel.hide()
+        self.button5.show()
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        
+
 
 class SubWidget(QWidget):
     def __init__(self, parent=None):
@@ -124,7 +161,7 @@ class SubWidget(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWidget()
-    widget.resize(1000, 780)
+    widget.resize(1000, 800)
     subwidget = SubWidget()
     subwidget.resize(500, 250)
     widget.show()
